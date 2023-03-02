@@ -59,7 +59,7 @@ getOpts c ("--move":s) =
     case s of
         [] -> Nothing
         _ -> getOpts (c {move = read (head s)}) (tail s)
-getOpts c s = Nothing
+getOpts _ _ = Nothing
 
 errorHandling :: Maybe Conf -> IO()
 errorHandling Nothing = putStrLn "Error: Args Err" >> exitWith(ExitFailure 84)
@@ -94,11 +94,10 @@ getLineRule ' ' ' ' '*' c =
 getLineRule ' ' ' ' ' ' c =
     let binaryRule = toBinary (rule c)
     in read [binaryRule !! 7]
-getLineRule _ _ _ c =
+getLineRule _ _ _ _ =
     0
 generateNextLine :: Conf -> String -> Char -> String
-generateNextLine c [] _= []
-generateNextLine c [x] _ =  " "
+generateNextLine _ [] _ =  " "
 generateNextLine c [x, y] _ =
     let binaryRule = getLineRule x y ' ' c
     in if binaryRule == 1 then "* " else "  "
@@ -108,7 +107,7 @@ generateNextLine c (x : y : z : xs) ch =
     else ch : generateNextLine c (y : z : xs) ' '
 
 wolframLoop :: Conf -> String -> Int -> IO()
-wolframLoop c str 0 = return ()
+wolframLoop _ _ 0 = return ()
 wolframLoop c str i =
     if (start c) == 0 then
             putStrLn str >> wolframLoop c (generateNextLine c str ' ') (i - 1)
@@ -137,3 +136,4 @@ main = do
         Just val ->
                 let c = doMove val
                 in wolframLoop c (generateFirstLine c) (lines c)
+        Nothing -> putStrLn "Error: Args Err" >> exitWith(ExitFailure 84)
