@@ -7,10 +7,11 @@
 import System.Environment (getArgs)
 import System.Exit
 import Prelude hiding (lines)
-import Control.Monad
+import Numeric (showIntAtBase)
+import Data.Char (intToDigit)
 
 data Conf = Conf {
-    rule :: Maybe Integer,
+    rule :: Integer,
     start :: Integer,
     lines :: Maybe Integer,
     window :: Integer,
@@ -19,19 +20,25 @@ data Conf = Conf {
 
 defaultConf :: Conf
 defaultConf = Conf {
-    rule = Nothing,
+    rule = -1,
     start = 0,
     lines = Nothing,
     window = 80,
     move = Nothing
 }
 
+toBinary :: Integer -> String
+toBinary n =
+    let binaryVal = showIntAtBase 2 intToDigit n ""
+        padding = replicate (8 - length binaryVal) '0'
+    in padding ++ binaryVal
+
 getOpts :: Conf -> [String] -> Maybe Conf
 getOpts c [] = Just c
 getOpts c ("--rule":s) =
     case s of
         [] -> Nothing
-        _ ->  getOpts (c {rule = Just (read (head s))}) (tail s)
+        _ ->  getOpts (c {rule = read (head s)}) (tail s)
 getOpts c ("--start":s) =
     case s of
         [] -> Nothing
@@ -50,14 +57,20 @@ getOpts c ("--move":s) =
         _ -> getOpts (c {move = Just (read (head s))}) (tail s)
 getOpts c [] = Nothing
 
+errorHandling :: Maybe Conf -> IO()
+errorHandling Nothing = putStrLn "Error: Args Err" >> exitWith(ExitFailure 84)
+errorHandling (Just c) =
+    if (rule c) == -1 then
+        putStrLn "Error: Wrong args" >> exitWith(ExitFailure 84)
+    else
+        return ()
 
 main :: IO()
 main = do
     args <- getArgs
     let confValue = getOpts defaultConf args
+    errorHandling confValue
     case confValue of
         Just val ->
-            when (rule val == Nothing) $ do
-                putStrLn "Error: Wrong args"
-                exitWith(ExitFailure 84)
-        Nothing -> putStrLn "Error: Wrong args" >> exitWith(ExitFailure 84)
+                let binaryRule = toBinary (rule val)
+                in putStrLn ("Rule: " ++ show binaryRule)
