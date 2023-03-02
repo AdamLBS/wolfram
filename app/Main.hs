@@ -11,23 +11,27 @@ import Numeric (showIntAtBase)
 import Data.Char (intToDigit)
 
 data Conf = Conf {
-    rule :: Integer,
-    start :: Integer,
-    lines :: Maybe Integer,
-    window :: Integer,
-    move :: Maybe Integer
+    rule :: Int,
+    start :: Int,
+    lines :: Int,
+    wd :: Int,
+    move :: Int
 }
+
+generateFirstLine:: Conf -> String
+generateFirstLine c =
+    replicate (wd c `div` 2) ' ' ++ "*" ++ replicate ((wd c `div` 2) - 1) ' '
 
 defaultConf :: Conf
 defaultConf = Conf {
     rule = -1,
     start = 0,
-    lines = Nothing,
-    window = 80,
-    move = Nothing
+    lines = -1,
+    wd = 80,
+    move = 0
 }
 
-toBinary :: Integer -> String
+toBinary :: Int -> String
 toBinary n =
     let binaryVal = showIntAtBase 2 intToDigit n ""
         padding = replicate (8 - length binaryVal) '0'
@@ -46,16 +50,16 @@ getOpts c ("--start":s) =
 getOpts c ("--lines":s) =
     case s of
         [] -> Nothing
-        _ -> getOpts (c {lines = Just (read (head s))}) (tail s)
+        _ -> getOpts (c {lines = read (head s)}) (tail s)
 getOpts c ("--window":s) =
     case s of
         [] -> Nothing
-        _  -> getOpts (c {window = read (head s)}) (tail s)
+        _  -> getOpts (c {wd= read (head s)}) (tail s)
 getOpts c ("--move":s) =
     case s of
         [] -> Nothing
-        _ -> getOpts (c {move = Just (read (head s))}) (tail s)
-getOpts c [] = Nothing
+        _ -> getOpts (c {move = read (head s)}) (tail s)
+getOpts c s = Nothing
 
 errorHandling :: Maybe Conf -> IO()
 errorHandling Nothing = putStrLn "Error: Args Err" >> exitWith(ExitFailure 84)
@@ -65,6 +69,65 @@ errorHandling (Just c) =
     else
         return ()
 
+getLineRule :: Char  -> Char -> Char -> Conf -> Int
+getLineRule '*' '*' '*' c =
+    let binaryRule = toBinary (rule c)
+    in read [binaryRule !! 0]
+getLineRule '*' '*' ' ' c =
+    let binaryRule = toBinary (rule c)
+    in read [binaryRule !! 1]
+getLineRule '*' ' ' '*' c =
+    let binaryRule = toBinary (rule c)
+    in read [binaryRule !! 2]
+getLineRule '*' ' ' ' ' c =
+    let binaryRule = toBinary (rule c)
+    in read [binaryRule !! 3]
+getLineRule ' ' '*' '*' c =
+    let binaryRule = toBinary (rule c)
+    in read [binaryRule !! 4]
+getLineRule ' ' '*' ' ' c =
+    let binaryRule = toBinary (rule c)
+    in read [binaryRule !! 5]
+getLineRule ' ' ' ' '*' c =
+    let binaryRule = toBinary (rule c)
+    in read [binaryRule !! 6]
+getLineRule ' ' ' ' ' ' c =
+    let binaryRule = toBinary (rule c)
+    in read [binaryRule !! 7]
+getLineRule _ _ _ c =
+    0
+generateNextLine :: Conf -> String -> Char -> String
+generateNextLine c [] _= []
+generateNextLine c [x] _ =  " "
+generateNextLine c [x, y] _ =
+    let binaryRule = getLineRule x y ' ' c
+    in if binaryRule == 1 then "* " else "  "
+generateNextLine c (x : y : z : xs) ch =
+    let binaryRule = getLineRule x y z c
+    in if binaryRule == 1 then ch : generateNextLine c (y : z : xs) '*'
+    else ch : generateNextLine c (y : z : xs) ' '
+
+wolframLoop :: Conf -> String -> Int -> IO()
+wolframLoop c str 0 = return ()
+wolframLoop c str i =
+    if (start c) == 0 then
+            putStrLn str >> wolframLoop c (generateNextLine c str ' ') (i - 1)
+    else
+        wolframLoop (dcS c) (generateNextLine (dcS c) str ' ') (i)
+
+dcS :: Conf -> Conf
+dcS c =
+    if (start c) == 0 then
+        c
+    else
+        c {start = (start c) - 1}
+doMove :: Conf -> Conf
+doMove c =
+    if (move c) == 0 then
+        c
+    else
+        c {wd = (wd c) + (move c)}
+
 main :: IO()
 main = do
     args <- getArgs
@@ -72,5 +135,5 @@ main = do
     errorHandling confValue
     case confValue of
         Just val ->
-                let binaryRule = toBinary (rule val)
-                in putStrLn ("Rule: " ++ show binaryRule)
+                let c = doMove val
+                in wolframLoop c (generateFirstLine c) (lines c)
