@@ -106,15 +106,14 @@ generate c (x : y : z : xs) ch =
     in if binaryRule == 1 then ch : generate c (y : z : xs) '*'
     else ch : generate c (y : z : xs) ' '
 
-printWithoutSpaces :: Int -> String -> IO()
-printWithoutSpaces 0 str = putStrLn str
-printWithoutSpaces runs str = printWithoutSpaces (runs - 1)  (init (tail str))
+printWithoutSpaces :: Int -> String -> Int -> IO()
+printWithoutSpaces runs str wd = putStrLn (take wd (drop runs str))
 
 loop :: Conf -> String -> Int -> Int -> IO()
 loop _ _ 0 _ = return ()
 loop c str i run =
     if (start c) == 0 then
-        printWithoutSpaces run str >>
+        printWithoutSpaces run str (wd c) >>
         loop c (" " ++ (generate c str ' ') ++ " ") (i - 1) (run + 1)
     else
         loop (dcS c)  (" " ++ (generate (dcS c) str ' ') ++ " ") (i) (run + 1)
