@@ -96,23 +96,28 @@ getLineRule ' ' ' ' ' ' c =
     in read [binaryRule !! 7]
 getLineRule _ _ _ _ =
     0
-generateNextLine :: Conf -> String -> Char -> String
-generateNextLine _ [] _ =  " "
-generateNextLine c [x, y] _ =
+generate :: Conf -> String -> Char -> String
+generate _ [] _ =  " "
+generate c [x, y] _ =
     let binaryRule = getLineRule x y ' ' c
     in if binaryRule == 1 then "* " else "  "
-generateNextLine c (x : y : z : xs) ch =
+generate c (x : y : z : xs) ch =
     let binaryRule = getLineRule x y z c
-    in if binaryRule == 1 then ch : generateNextLine c (y : z : xs) '*'
-    else ch : generateNextLine c (y : z : xs) ' '
+    in if binaryRule == 1 then ch : generate c (y : z : xs) '*'
+    else ch : generate c (y : z : xs) ' '
 
-wolframLoop :: Conf -> String -> Int -> IO()
-wolframLoop _ _ 0 = return ()
-wolframLoop c str i =
+printWithoutSpaces :: Int -> String -> IO()
+printWithoutSpaces 0 str = putStrLn str
+printWithoutSpaces runs str = printWithoutSpaces (runs - 1)  (init (tail str))
+
+loop :: Conf -> String -> Int -> Int -> IO()
+loop _ _ 0 _ = return ()
+loop c str i run =
     if (start c) == 0 then
-            putStrLn str >> wolframLoop c (generateNextLine c str ' ') (i - 1)
+        printWithoutSpaces run str >>
+        loop c (" " ++ (generate c str ' ') ++ " ") (i - 1) (run + 1)
     else
-        wolframLoop (dcS c) (generateNextLine (dcS c) str ' ') (i)
+        loop (dcS c)  (" " ++ (generate (dcS c) str ' ') ++ " ") (i) (run + 1)
 
 dcS :: Conf -> Conf
 dcS c =
@@ -135,5 +140,5 @@ main = do
     case confValue of
         Just val ->
                 let c = doMove val
-                in wolframLoop c (generateFirstLine c) (lines c)
+                in loop c (generateFirstLine c) (lines c) 0
         Nothing -> putStrLn "Error: Args Err" >> exitWith(ExitFailure 84)
