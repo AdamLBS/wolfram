@@ -92,7 +92,8 @@ getLineRule ' ' ' ' ' ' c =
 getLineRule _ _ _ _ =
     0
 generate :: Conf -> String -> Char -> String
-generate _ [] _ =  " "
+generate  (Conf _ _ _ _ _ _) [_] _ =  " "
+generate (Conf _ _ _ _ _ _) [] _ = ""
 generate c [x, y] ch =
     let binaryRule = getLineRule x y ' ' c
     in if binaryRule == 1 then ch : generate c [] '*'
@@ -103,7 +104,7 @@ generate c (x : y : z : xs) ch =
     else ch : generate c (y : z : xs) ' '
 
 printWithoutSpaces :: Int -> String -> Int -> IO()
-printWithoutSpaces runs str wd = putStrLn (take wd (drop runs str))
+printWithoutSpaces runs str wind = putStrLn (take wind (drop runs str))
 
 loop :: Conf -> String -> Int -> Int -> IO()
 loop _ _ 0 _ = return ()
@@ -120,14 +121,6 @@ dcS c =
         c
     else
         c {start = (start c) - 1}
-doMove :: Conf -> Conf
-doMove c =
-    if (move c) == 0 then
-        c
-    else
-        c {wd = (wd c) + (move c)}
-
-
 
 addBinaryToConf :: Conf -> Conf
 
