@@ -21,7 +21,7 @@ data Conf = Conf {
 
 generateFirstLine:: Conf -> String
 generateFirstLine c =
-    replicate (wd c `div` 2) ' ' ++ "*" ++ replicate ((wd c `div` 2)) ' '
+    replicate ((wd c `div` 2) + move c) ' ' ++ "*" ++ replicate ((wd c `div` 2) - move c) ' '
 
 defaultConf :: Conf
 defaultConf = Conf {
@@ -66,7 +66,7 @@ getOpts _ _ = Nothing
 errorHandling :: Maybe Conf -> IO()
 errorHandling Nothing = putStrLn "Error: Args Err" >> exitWith(ExitFailure 84)
 errorHandling (Just c) =
-    if (rule c) == -1 then
+    if ((rule c) < 0 || (rule c) > 255) then
         putStrLn "Error: Wrong args" >> exitWith(ExitFailure 84)
     else
         return ()
@@ -92,9 +92,10 @@ getLineRule _ _ _ _ =
     0
 generate :: Conf -> String -> Char -> String
 generate _ [] _ =  " "
-generate c [x, y] _ =
+generate c [x, y] ch =
     let binaryRule = getLineRule x y ' ' c
-    in if binaryRule == 1 then "* " else "  "
+    in if binaryRule == 1 then ch : generate c [] '*'
+    else ch : generate c []' '
 generate c (x : y : z : xs) ch =
     let binaryRule = getLineRule x y z c
     in if binaryRule == 1 then ch : generate c (y : z : xs) '*'
@@ -138,6 +139,6 @@ main = do
     errorHandling confValue
     case confValue of
         Just val ->
-                let c = addBinaryToConf (doMove val)
+                let c = addBinaryToConf val
                 in loop c (generateFirstLine c) (lines c) 0
         Nothing -> putStrLn "Error: Args Err" >> exitWith(ExitFailure 84)
