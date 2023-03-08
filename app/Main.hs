@@ -96,8 +96,8 @@ generate  (Conf _ _ _ _ _ _) [_] _ =  " "
 generate (Conf _ _ _ _ _ _) [] _ = ""
 generate c [x, y] ch =
     let binaryRule = getLineRule x y ' ' c
-    in if binaryRule == 1 then ch : generate c [] '*'
-    else ch : generate c []' '
+    in if binaryRule == 1 then ch : "*"
+    else ch : " "
 generate c (x : y : z : xs) ch =
     let binaryRule = getLineRule x y z c
     in if binaryRule == 1 then ch : generate c (y : z : xs) '*'
