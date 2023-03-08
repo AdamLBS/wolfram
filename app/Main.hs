@@ -21,7 +21,8 @@ data Conf = Conf {
 
 generateFirstLine:: Conf -> String
 generateFirstLine c =
-    replicate ((wd c `div` 2) + move c) ' ' ++ "*" ++ replicate ((wd c `div` 2) - move c) ' '
+    let first = replicate ((wd c `div` 2) + move c) ' '
+    in first ++ "*" ++replicate ((wd c `div` 2) - move c) ' '
 
 defaultConf :: Conf
 defaultConf = Conf {
