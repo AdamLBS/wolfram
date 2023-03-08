@@ -9,7 +9,7 @@ import System.Exit
 import Prelude hiding (lines)
 import Numeric (showIntAtBase)
 import Data.Char (intToDigit)
-
+import Text.Read 
 data Conf = Conf {
     rule :: Int,
     start :: Int,
@@ -45,23 +45,43 @@ getOpts c [] = Just c
 getOpts c ("--rule":s) =
     case s of
         [] -> Nothing
-        _ ->  getOpts (c {rule = read (head s)}) (tail s)
+        _ ->
+            let val = readMaybe (head s)
+            in case val of
+                Nothing -> Nothing
+                Just newVal -> getOpts (c {rule = newVal}) (tail s)
 getOpts c ("--start":s) =
     case s of
         [] -> Nothing
-        _ -> getOpts (c {start = read (head s)}) (tail s)
+        _ ->
+            let val = readMaybe (head s)
+            in case val of
+                Nothing -> Nothing
+                Just newVal -> getOpts (c {start = newVal}) (tail s)
 getOpts c ("--lines":s) =
     case s of
         [] -> Nothing
-        _ -> getOpts (c {lines = read (head s)}) (tail s)
+        _ ->
+            let val = readMaybe (head s)
+            in case val of
+                Nothing -> Nothing
+                Just newVal -> getOpts (c {lines = newVal}) (tail s)
 getOpts c ("--window":s) =
     case s of
         [] -> Nothing
-        _  -> getOpts (c {wd= read (head s)}) (tail s)
+        _ ->
+            let val = readMaybe (head s)
+            in case val of
+                Nothing -> Nothing
+                Just newVal -> getOpts (c {wd = newVal}) (tail s)
 getOpts c ("--move":s) =
     case s of
         [] -> Nothing
-        _ -> getOpts (c {move = read (head s)}) (tail s)
+        _ ->
+            let val = readMaybe (head s)
+            in case val of
+                Nothing -> Nothing
+                Just newVal -> getOpts (c {move = newVal}) (tail s)
 getOpts _ _ = Nothing
 
 errorHandling :: Maybe Conf -> IO()
