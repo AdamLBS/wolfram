@@ -15,12 +15,13 @@ data Conf = Conf {
     start :: Int,
     lines :: Int,
     wd :: Int,
-    move :: Int
+    move :: Int,
+    bR :: [Int]
 }
 
 generateFirstLine:: Conf -> String
 generateFirstLine c =
-    replicate (wd c `div` 2) ' ' ++ "*" ++ replicate ((wd c `div` 2) - 1) ' '
+    replicate (wd c `div` 2) ' ' ++ "*" ++ replicate ((wd c `div` 2)) ' '
 
 defaultConf :: Conf
 defaultConf = Conf {
@@ -28,14 +29,15 @@ defaultConf = Conf {
     start = 0,
     lines = -1,
     wd = 80,
-    move = 0
+    move = 0,
+    bR = [0]
 }
 
 toBinary :: Int -> String
 toBinary n =
     let binaryVal = showIntAtBase 2 intToDigit n ""
         padding = replicate (8 - length binaryVal) '0'
-    in padding ++ binaryVal
+    in (padding ++ binaryVal)
 
 getOpts :: Conf -> [String] -> Maybe Conf
 getOpts c [] = Just c
@@ -71,29 +73,21 @@ errorHandling (Just c) =
 
 getLineRule :: Char  -> Char -> Char -> Conf -> Int
 getLineRule '*' '*' '*' c =
-    let binaryRule = toBinary (rule c)
-    in read [binaryRule !! 0]
+    (bR c) !! 0
 getLineRule '*' '*' ' ' c =
-    let binaryRule = toBinary (rule c)
-    in read [binaryRule !! 1]
+    (bR c) !! 1
 getLineRule '*' ' ' '*' c =
-    let binaryRule = toBinary (rule c)
-    in read [binaryRule !! 2]
+    (bR c) !! 2
 getLineRule '*' ' ' ' ' c =
-    let binaryRule = toBinary (rule c)
-    in read [binaryRule !! 3]
+    (bR c) !! 3
 getLineRule ' ' '*' '*' c =
-    let binaryRule = toBinary (rule c)
-    in read [binaryRule !! 4]
+    (bR c) !! 4
 getLineRule ' ' '*' ' ' c =
-    let binaryRule = toBinary (rule c)
-    in read [binaryRule !! 5]
+    (bR c) !! 5
 getLineRule ' ' ' ' '*' c =
-    let binaryRule = toBinary (rule c)
-    in read [binaryRule !! 6]
+    (bR c) !! 6
 getLineRule ' ' ' ' ' ' c =
-    let binaryRule = toBinary (rule c)
-    in read [binaryRule !! 7]
+    (bR c) !! 7
 getLineRule _ _ _ _ =
     0
 generate :: Conf -> String -> Char -> String
@@ -131,6 +125,12 @@ doMove c =
     else
         c {wd = (wd c) + (move c)}
 
+
+
+addBinaryToConf :: Conf -> Conf
+
+addBinaryToConf c = c {bR = map (read . (:"")) (toBinary (rule c)) :: [Int]}
+
 main :: IO()
 main = do
     args <- getArgs
@@ -138,6 +138,6 @@ main = do
     errorHandling confValue
     case confValue of
         Just val ->
-                let c = doMove val
+                let c = addBinaryToConf (doMove val)
                 in loop c (generateFirstLine c) (lines c) 0
         Nothing -> putStrLn "Error: Args Err" >> exitWith(ExitFailure 84)

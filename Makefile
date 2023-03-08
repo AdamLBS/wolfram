@@ -20,4 +20,9 @@ fclean: clean
 
 re:    fclean all
 
+time:
+	stack build --profile
+	cp $(shell stack path --local-install-root)/bin/$(NAME)-exe ./$(NAME)
+	stack exec --profile -- wolfram-exe +RTS -p -RTS --rule 90 --lines 4000
+
 .PHONY: all clean fclean re
